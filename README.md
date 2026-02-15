@@ -372,7 +372,7 @@ Using Turborepo + pnpm workspaces lets us share types, security utilities, and q
 
 ## AI Disclosure
 
-Approximately **50% of the code in this project was written with AI assistance** (Claude by Anthropic), primarily for boilerplate generation, repetitive CRUD operations, and initial scaffolding.
+Approximately **50% of the code in this project was written with AI assistance**, primarily for boilerplate generation, repetitive CRUD operations, and initial scaffolding.
 
 Human-written:
 - Core business logic (escrow flow, deal state machine, dispute resolution)
