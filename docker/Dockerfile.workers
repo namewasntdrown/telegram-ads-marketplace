@@ -1,0 +1,62 @@
+# Build stage
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY apps/workers/package.json ./apps/workers/
+COPY libs/shared-types/package.json ./libs/shared-types/
+COPY libs/prisma-client/package.json ./libs/prisma-client/
+COPY libs/ton-utils/package.json ./libs/ton-utils/
+COPY libs/queue-contracts/package.json ./libs/queue-contracts/
+
+RUN pnpm install --frozen-lockfile
+
+COPY libs ./libs
+COPY apps/workers ./apps/workers
+COPY tsconfig.json ./
+
+RUN npx prisma@5.22.0 generate --schema=libs/prisma-client/prisma/schema.prisma
+RUN pnpm --filter @tam/workers build
+
+# Production stage
+FROM node:20-slim AS production
+
+WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 1001 nodejs && \
+    useradd -u 1001 -g nodejs -s /bin/bash nodejs
+
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/workers/package.json ./apps/workers/
+COPY libs/shared-types/package.json ./libs/shared-types/
+COPY libs/prisma-client/package.json ./libs/prisma-client/
+COPY libs/ton-utils/package.json ./libs/ton-utils/
+COPY libs/queue-contracts/package.json ./libs/queue-contracts/
+
+COPY libs/prisma-client/prisma ./libs/prisma-client/prisma
+
+RUN pnpm install --prod --frozen-lockfile && \
+    npx prisma@5.22.0 generate --schema=libs/prisma-client/prisma/schema.prisma
+
+COPY --from=builder /app/apps/workers/dist ./apps/workers/dist
+COPY --from=builder /app/libs/shared-types/dist ./libs/shared-types/dist
+COPY --from=builder /app/libs/prisma-client/dist ./libs/prisma-client/dist
+COPY --from=builder /app/libs/ton-utils/dist ./libs/ton-utils/dist
+COPY --from=builder /app/libs/queue-contracts/dist ./libs/queue-contracts/dist
+
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+CMD ["node", "apps/workers/dist/main.js"]

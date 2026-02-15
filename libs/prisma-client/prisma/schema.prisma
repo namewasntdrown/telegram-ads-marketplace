@@ -1,0 +1,597 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum ChannelStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum FolderStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum DealStatus {
+  // Новый упрощённый flow
+  PENDING              // Заявка ожидает одобрения владельца канала
+  SCHEDULED            // Одобрено, средства заблокированы, ждёт scheduledPostTime
+  POSTED               // Опубликовано в канале
+  RELEASED             // Средства выплачены
+  DISPUTED             // Открыт спор
+  REFUNDED             // Возврат средств
+  CANCELLED            // Отменено
+  EXPIRED              // Истекло
+
+  // Legacy (для миграции)
+  DRAFT
+  AWAITING_DEPOSIT
+  FUNDED
+  CONTENT_PENDING
+  CONTENT_SUBMITTED
+  CONTENT_APPROVED
+  AWAITING_VERIFICATION
+  VERIFIED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ESCROW_LOCK
+  ESCROW_RELEASE
+  ESCROW_REFUND
+  FEE
+  BOOST_CHANNEL
+  BOOST_FOLDER
+  FOLDER_PLACEMENT
+  APPEAL_REVERSAL
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum ContentType {
+  TEXT
+  PHOTO
+  VIDEO
+  DOCUMENT
+}
+
+enum DisputeReason {
+  CONTENT_NOT_POSTED
+  WRONG_CONTENT
+  EARLY_DELETION
+  FAKE_STATISTICS
+  OTHER
+}
+
+enum ChannelAdminRole {
+  OWNER
+  ADMIN
+}
+
+enum FolderPlacementStatus {
+  PENDING
+  APPROVED       // Approved, funds in escrow
+  COMPLETED      // Escrow released to folder owner
+  REJECTED
+  CANCELLED
+}
+
+enum AppealType {
+  DEAL_DISPUTE_RESOLUTION
+  CHANNEL_REJECTION
+  FOLDER_REJECTION
+  PLACEMENT_REJECTION
+}
+
+enum AppealStatus {
+  PENDING
+  UPHELD
+  REVERSED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  telegramId    BigInt   @unique
+  username      String?
+  firstName     String?
+  lastName      String?
+  photoUrl      String?
+  walletAddress String?
+  role          UserRole @default(USER)
+  balanceTon       Decimal  @default(0) @db.Decimal(20, 9)
+  frozenTon        Decimal  @default(0) @db.Decimal(20, 9)
+  appealFrozenTon  Decimal  @default(0) @db.Decimal(20, 9)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  channels                Channel[]
+  campaigns               Campaign[]
+  folders                 Folder[]
+  dealsAsAdvertiser       Deal[]              @relation("AdvertiserDeals")
+  dealsAsChannelOwner     Deal[]              @relation("ChannelOwnerDeals")
+  transactions            Transaction[]
+  depositAddresses        DepositAddress[]
+  refreshTokens           RefreshToken[]
+  auditLogs               AuditLog[]
+  channelOwnerPlacements  FolderPlacement[]   @relation("ChannelOwnerPlacements")
+  folderOwnerPlacements   FolderPlacement[]   @relation("FolderOwnerPlacements")
+  notifications           Notification[]
+  appealsAsAppellant      Appeal[]            @relation("UserAppeals")
+  channelAdmins           ChannelAdmin[]
+  dealMessages            DealMessage[]
+
+  @@index([telegramId])
+  @@index([walletAddress])
+}
+
+model Channel {
+  id              String        @id @default(cuid())
+  telegramId      BigInt        @unique
+  username        String?
+  title           String
+  description     String?
+  avatarUrl       String?
+  avatarKey       String?       // Key in MinIO storage: "avatars/channel_xxx.jpg"
+  avatarUpdatedAt DateTime?     // When avatar was last updated in storage
+  subscriberCount Int           @default(0)
+  avgViews        Int           @default(0)
+  pricePerPost    Decimal       @db.Decimal(20, 9)
+  formatPrices    Json?         // {"1_24": "10", "2_48": "18", "no_delete": "25", "repost": "5"}
+  categories      String[]
+  language        String        @default("en")
+  status          ChannelStatus @default(PENDING)
+  rejectionReason String?
+  boostAmount     Decimal       @default(0) @db.Decimal(20, 9)
+  boostUntil      DateTime?
+  ownerId         String
+  owner           User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Statistics
+  engagementRate       Float     @default(0)    // ER в процентах
+  subscriberGrowthWeek Int       @default(0)    // Рост за неделю
+  subscriberGrowthMonth Int      @default(0)    // Рост за месяц
+
+  // Audience
+  audienceGeo   Json?    // {"RU": 45, "UA": 20, "BY": 10, ...}
+  peakHours     Json?    // [18, 19, 20, 21] - часы пиковой активности
+
+  // Verification - sha6kii is admin and can access full stats
+  isVerified        Boolean   @default(false)  // sha6kii is admin of this channel
+  verifiedAt        DateTime? // When verification was confirmed
+
+  // Verified Telegram Stats (fetched via sha6kii admin access)
+  hasVerifiedStats  Boolean   @default(false)
+  languageStats     Json?     // {"ru": 45, "en": 30, "uk": 15, ...} - from Telegram stats
+  premiumStats      Json?     // {premiumPercent: 25, ...} - Premium subscriber stats
+  viewSourceStats   Json?     // {fromSearch: 10, fromLinks: 50, ...} - view sources
+  viewsHistory      Json?     // [{"date": "2026-01-01", "views": 1500}, ...] - daily views from Telegram
+  followersHistory  Json?     // [{"date": "2026-01-01", "followers": 950}, ...] - daily followers from Telegram
+  lastStatsUpdate   DateTime? // Last time verified stats were fetched
+  telegramGrowthStats Json?   // Telegram stats: {followers, viewsPerPost, sharesPerPost} with current/change/percent
+
+  // Trust & Reputation
+  channelCreatedAt    DateTime?  // Дата создания канала в Telegram
+  completedDealsCount Int       @default(0)
+  rating              Float     @default(0)   // Средний рейтинг 0-5
+  reviewsCount        Int       @default(0)
+  successRate         Float     @default(0)   // Процент успешных сделок
+  avgResponseTime     Int?                    // Среднее время ответа в минутах
+
+  // Advertising Conditions
+  adFormats         String[]   // ["TEXT", "PHOTO", "VIDEO", "REPOST"]
+  postDuration      String     @default("24H")  // 24H, 48H, 72H, WEEK, FOREVER
+  restrictions      String[]   // ["NO_GAMBLING", "NO_ADULT", "NO_POLITICS"]
+  allowsNativeAds   Boolean    @default(true)
+
+  rejectedByAdminId String?
+
+  deals             Deal[]
+  channelStats      ChannelStats[]
+  reviews           ChannelReview[]
+  folderPlacements  FolderPlacement[]
+  appeals           Appeal[]
+  admins            ChannelAdmin[]
+
+  @@index([telegramId])
+  @@index([status])
+  @@index([ownerId])
+  @@index([categories])
+  @@index([language])
+  @@index([subscriberCount])
+  @@index([pricePerPost])
+  @@index([boostAmount])
+  @@index([rating])
+  @@index([completedDealsCount])
+}
+
+model Campaign {
+  id              String         @id @default(cuid())
+  title           String
+  description     String?
+  totalBudget     Decimal        @db.Decimal(20, 9)
+  spentBudget     Decimal        @default(0) @db.Decimal(20, 9)
+  categories      String[]
+  targetLanguages String[]
+  status          CampaignStatus @default(DRAFT)
+  advertiserId    String
+  advertiser      User           @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  briefText         String?    @db.Text
+  requirements      String?    @db.Text
+  isPublic          Boolean    @default(false)
+  minSubscribers    Int?
+  maxBudgetPerDeal  Decimal?   @db.Decimal(20, 9)
+
+  deals Deal[]
+
+  @@index([advertiserId])
+  @@index([status])
+  @@index([isPublic, status])
+}
+
+model Folder {
+  id              String            @id @default(cuid())
+  title           String
+  description     String?
+  folderLink      String            @unique
+  folderHash      String?
+  categories      String[]
+  status          FolderStatus      @default(PENDING)
+  boostAmount     Decimal           @default(0) @db.Decimal(20, 9)
+  boostUntil      DateTime?
+  pricePerChannel Decimal?          @db.Decimal(20, 9)
+  ownerId         String
+  owner           User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Collection settings
+  collectionDeadline   DateTime?    // До какого числа принимаются заявки
+  maxChannels          Int?         // Максимум каналов в папке
+  minSubscribers       Int?         // Минимум подписчиков у канала
+
+  // Synced channels from Telegram (actual folder contents)
+  syncedChannels  Json?             // Array of {telegramId, title, username, subscriberCount}
+  lastSyncedAt    DateTime?
+
+  rejectedByAdminId String?
+
+  placements      FolderPlacement[]
+  appeals         Appeal[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([boostAmount])
+}
+
+model Deal {
+  id                   String        @id @default(cuid())
+  amount               Decimal       @db.Decimal(20, 9)
+  platformFee          Decimal       @db.Decimal(20, 9)
+  status               DealStatus    @default(DRAFT)
+  contentType          ContentType   @default(TEXT)
+  contentText          String?
+  contentMediaUrls     String[]
+  postUrl              String?
+  postMessageId        Int?
+  scheduledPostTime    DateTime?
+  actualPostTime       DateTime?
+  minViewsRequired     Int?
+  viewsAtVerification  Int?
+  verificationDeadline DateTime?
+  disputeReason        DisputeReason?
+  disputeDescription   String?
+
+  campaignId     String
+  campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  channelId      String
+  channel        Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  advertiserId   String
+  advertiser     User     @relation("AdvertiserDeals", fields: [advertiserId], references: [id], onDelete: Cascade)
+  channelOwnerId String
+  channelOwner   User     @relation("ChannelOwnerDeals", fields: [channelOwnerId], references: [id], onDelete: Cascade)
+
+  briefText              String?
+  briefMediaUrls         String[]
+  draftContentText       String?
+  draftContentMediaUrls  String[]
+  contentRevisionNote    String?
+  contentRevisionCount   Int       @default(0)
+  adFormat               String?
+
+  resolvedByAdminId String?
+  appealDeadline    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+  statusHistory DealStatusHistory[]
+  appeals       Appeal[]
+  messages      DealMessage[]
+
+  @@index([status])
+  @@index([campaignId])
+  @@index([channelId])
+  @@index([advertiserId])
+  @@index([channelOwnerId])
+  @@index([scheduledPostTime])
+  @@index([verificationDeadline])
+  @@index([appealDeadline])
+}
+
+model DealStatusHistory {
+  id        String     @id @default(cuid())
+  dealId    String
+  deal      Deal       @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  fromStatus DealStatus?
+  toStatus  DealStatus
+  reason    String?
+  createdAt DateTime   @default(now())
+
+  @@index([dealId])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id                 String            @id @default(cuid())
+  tonTxHash          String?           @unique
+  amount             Decimal           @db.Decimal(20, 9)
+  type               TransactionType
+  status             TransactionStatus @default(PENDING)
+  metadata           Json?
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId             String?
+  deal               Deal?             @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  folderPlacementId  String?
+  folderPlacement    FolderPlacement?  @relation(fields: [folderPlacementId], references: [id], onDelete: SetNull)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([dealId])
+  @@index([folderPlacementId])
+  @@index([tonTxHash])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model DepositAddress {
+  id        String   @id @default(cuid())
+  address   String
+  memo      String   @unique
+  isActive  Boolean  @default(true)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+  @@index([memo])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model ChannelStats {
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  date            DateTime @db.Date
+  subscriberCount Int
+  avgViews        Int
+  postsCount      Int
+  engagement      Decimal  @db.Decimal(5, 2)
+  createdAt       DateTime @default(now())
+
+  @@unique([channelId, date])
+  @@index([channelId])
+  @@index([date])
+}
+
+model ChannelReview {
+  id         String   @id @default(cuid())
+  channelId  String
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reviewerId String   // User who left the review (advertiser)
+  dealId     String?  // Optional reference to the deal
+  rating     Int      // 1-5 stars
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([channelId, reviewerId, dealId])
+  @@index([channelId])
+  @@index([reviewerId])
+  @@index([rating])
+}
+
+model FolderPlacement {
+  id              String                @id @default(cuid())
+
+  folderId        String
+  folder          Folder                @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  channelId       String
+  channel         Channel               @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  channelOwnerId  String
+  channelOwner    User                  @relation("ChannelOwnerPlacements", fields: [channelOwnerId], references: [id])
+
+  folderOwnerId   String
+  folderOwner     User                  @relation("FolderOwnerPlacements", fields: [folderOwnerId], references: [id])
+
+  amount          Decimal               @db.Decimal(20, 9)
+  platformFee     Decimal               @db.Decimal(20, 9)
+
+  status            FolderPlacementStatus @default(PENDING)
+  rejectionReason   String?
+  rejectedByAdminId String?
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  approvedAt      DateTime?
+  escrowReleaseAt DateTime?             // When escrow funds should be released (approvedAt + 3 days)
+  completedAt     DateTime?             // When funds were actually released
+
+  transactions    Transaction[]
+  appeals         Appeal[]
+
+  @@unique([folderId, channelId])
+  @@index([folderId])
+  @@index([channelId])
+  @@index([channelOwnerId])
+  @@index([folderOwnerId])
+  @@index([status])
+  @@index([escrowReleaseAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Notification {
+  id              String   @id @default(cuid())
+  type            String   // DEAL_CREATED, DEAL_APPROVED, etc.
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  message         String
+  isRead          Boolean  @default(false)
+  data            Json?    // {dealId, channelId, channelTitle, amount, ...}
+  createdAt       DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+model Appeal {
+  id                String       @id @default(cuid())
+  type              AppealType
+  status            AppealStatus @default(PENDING)
+
+  appellantId       String
+  appellant         User         @relation("UserAppeals", fields: [appellantId], references: [id])
+  originalAdminId   String?
+  reviewerAdminId   String?
+
+  reason            String       @db.Text
+  adminNotes        String?      @db.Text
+
+  dealId            String?
+  deal              Deal?        @relation(fields: [dealId], references: [id])
+  channelId         String?
+  channel           Channel?     @relation(fields: [channelId], references: [id])
+  folderId          String?
+  folder            Folder?      @relation(fields: [folderId], references: [id])
+  folderPlacementId String?
+  folderPlacement   FolderPlacement? @relation(fields: [folderPlacementId], references: [id])
+
+  frozenAmount      Decimal?     @db.Decimal(20, 9)
+  originalResolution String?
+
+  createdAt         DateTime     @default(now())
+  resolvedAt        DateTime?
+  updatedAt         DateTime     @updatedAt
+
+  @@unique([dealId, type])
+  @@unique([channelId, type])
+  @@unique([folderId, type])
+  @@unique([folderPlacementId, type])
+  @@index([appellantId])
+  @@index([status])
+}
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model ChannelAdmin {
+  id        String           @id @default(cuid())
+  channelId String
+  channel   Channel          @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ChannelAdminRole @default(ADMIN)
+  addedAt   DateTime         @default(now())
+  @@unique([channelId, userId])
+  @@index([channelId])
+  @@index([userId])
+}
+
+model DealMessage {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+  @@index([dealId, createdAt])
+  @@index([senderId])
+}

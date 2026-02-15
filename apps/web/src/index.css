@@ -1,0 +1,750 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="light"] {
+  /* Telegram Light Theme Colors */
+  --tg-bg-color: #ffffff;
+  --tg-bg-secondary: #f4f4f5;
+  --tg-text-color: #000000;
+  --tg-text-secondary: #707579;
+  --tg-link-color: #2AABEE;
+  --tg-button-color: #2AABEE;
+  --tg-button-text-color: #ffffff;
+  --tg-separator: #e5e5e5;
+
+  /* Status colors */
+  --tg-success: #31B545;
+  --tg-warning: #FFA000;
+  --tg-error: #E53935;
+
+  /* Accent */
+  --accent: #2AABEE;
+  --accent-rgb: 42, 171, 238;
+
+  /* Card shadows for light theme */
+  --tg-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --tg-shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] {
+  /* Telegram Dark Theme Colors */
+  --tg-bg-color: #212121;
+  --tg-bg-secondary: #181818;
+  --tg-text-color: #ffffff;
+  --tg-text-secondary: #aaaaaa;
+  --tg-link-color: #64B5F6;
+  --tg-button-color: #2AABEE;
+  --tg-button-text-color: #ffffff;
+  --tg-separator: #303030;
+
+  /* Status colors - slightly adjusted for dark bg */
+  --tg-success: #4CAF50;
+  --tg-warning: #FFB74D;
+  --tg-error: #EF5350;
+
+  /* Accent */
+  --accent: #64B5F6;
+  --accent-rgb: 100, 181, 246;
+
+  /* Card shadows for dark theme */
+  --tg-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --tg-shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--tg-bg-secondary);
+  color: var(--tg-text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Telegram Style Components */
+@layer components {
+  /* Cards */
+  .tg-card {
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: var(--tg-bg-color);
+    box-shadow: var(--tg-shadow);
+  }
+
+  .tg-card-elevated {
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: var(--tg-bg-color);
+    box-shadow: var(--tg-shadow-elevated);
+  }
+
+  .tg-card-bordered {
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: var(--tg-bg-color);
+    border: 1px solid var(--tg-separator);
+  }
+
+  .tg-card-flat {
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: var(--tg-bg-secondary);
+  }
+
+  /* Buttons */
+  .tg-btn-primary {
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    color: white;
+    background-color: var(--tg-button-color);
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .tg-btn-primary:hover {
+    background-color: #1E96D1;
+  }
+
+  .tg-btn-primary:active {
+    background-color: #1A88BE;
+    transform: scale(0.98);
+  }
+
+  .tg-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .tg-btn-secondary {
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    background-color: var(--tg-bg-secondary);
+    color: var(--tg-text-color);
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .tg-btn-secondary:hover {
+    background-color: #e8e8e9;
+  }
+
+  .tg-btn-secondary:active {
+    background-color: #dcdcde;
+    transform: scale(0.98);
+  }
+
+  .tg-btn-ghost {
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    background-color: transparent;
+    color: var(--tg-link-color);
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .tg-btn-ghost:hover {
+    background-color: rgba(42, 171, 238, 0.08);
+  }
+
+  .tg-btn-ghost:active {
+    background-color: rgba(42, 171, 238, 0.12);
+  }
+
+  .tg-btn-danger {
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    color: white;
+    background-color: var(--tg-error);
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .tg-btn-danger:hover {
+    background-color: #D32F2F;
+  }
+
+  .tg-btn-danger:active {
+    background-color: #C62828;
+    transform: scale(0.98);
+  }
+
+  /* Inputs */
+  .tg-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    outline: none;
+    background-color: var(--tg-bg-secondary);
+    border: 1px solid transparent;
+    color: var(--tg-text-color);
+    transition: all 0.15s ease;
+  }
+
+  .tg-input::placeholder {
+    color: var(--tg-text-secondary);
+  }
+
+  .tg-input:focus {
+    border-color: var(--tg-link-color);
+    background-color: var(--tg-bg-color);
+  }
+
+  .tg-input-bordered {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    outline: none;
+    background-color: var(--tg-bg-color);
+    border: 1px solid var(--tg-separator);
+    color: var(--tg-text-color);
+    transition: all 0.15s ease;
+  }
+
+  .tg-input-bordered::placeholder {
+    color: var(--tg-text-secondary);
+  }
+
+  .tg-input-bordered:focus {
+    border-color: var(--tg-link-color);
+  }
+
+  /* Badges */
+  .tg-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--tg-bg-secondary);
+    color: var(--tg-text-secondary);
+  }
+
+  .tg-badge-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(42, 171, 238, 0.12);
+    color: var(--tg-link-color);
+  }
+
+  .tg-badge-success {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(49, 181, 69, 0.12);
+    color: var(--tg-success);
+  }
+
+  .tg-badge-warning {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(255, 160, 0, 0.12);
+    color: #E68A00;
+  }
+
+  .tg-badge-error {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgba(229, 57, 53, 0.12);
+    color: var(--tg-error);
+  }
+
+  /* Lists */
+  .tg-list {
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: var(--tg-bg-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .tg-list-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--tg-separator);
+    transition: background-color 0.15s ease;
+  }
+
+  .tg-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .tg-list-item:active {
+    background-color: var(--tg-bg-secondary);
+  }
+
+  /* Modal */
+  .tg-modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  .tg-modal {
+    border-radius: 14px 14px 0 0;
+    background-color: var(--tg-bg-color);
+    overflow: hidden;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .tg-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--tg-separator);
+  }
+
+  .tg-modal-content {
+    padding: 1rem;
+  }
+
+  /* Navigation */
+  .tg-nav {
+    background-color: var(--tg-bg-color);
+    border-top: 1px solid var(--tg-separator);
+  }
+
+  .tg-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    color: var(--tg-text-secondary);
+    transition: color 0.15s ease;
+  }
+
+  .tg-nav-item-active {
+    color: var(--tg-link-color);
+  }
+
+  /* Section */
+  .tg-section {
+    margin-bottom: 1rem;
+  }
+
+  .tg-section-header {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--tg-text-secondary);
+  }
+
+  /* Stat box */
+  .tg-stat {
+    padding: 0.75rem;
+    border-radius: 10px;
+    text-align: center;
+    background-color: var(--tg-bg-secondary);
+  }
+
+  /* Skeleton Loading */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: var(--tg-separator);
+  }
+
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--tg-bg-color) 50%,
+      transparent 100%
+    );
+    opacity: 0.5;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Segmented Control */
+  .tg-segment {
+    padding: 0.25rem;
+    border-radius: 12px;
+    background-color: var(--tg-bg-secondary);
+  }
+
+  .tg-segment-button {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--tg-text-secondary);
+    transition: all 0.15s ease;
+  }
+
+  .tg-segment-button-active {
+    background-color: var(--tg-bg-color);
+    color: var(--tg-text-color);
+    box-shadow: var(--tg-shadow);
+  }
+
+  /* Avatar */
+  .tg-avatar {
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: var(--tg-bg-secondary);
+  }
+
+  .tg-avatar-ring {
+    border-radius: 9999px;
+    box-shadow: 0 0 0 2px var(--tg-link-color);
+  }
+
+  /* Divider */
+  .tg-divider {
+    height: 1px;
+    background-color: var(--tg-separator);
+  }
+
+  /* Icon container */
+  .tg-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: var(--tg-bg-secondary);
+  }
+
+  .tg-icon-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: rgba(42, 171, 238, 0.12);
+    color: var(--tg-link-color);
+  }
+}
+
+/* Legacy class mappings for backward compatibility */
+.neu-card,
+.glass-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: var(--tg-bg-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.neu-card-pressed,
+.glass-card-accent,
+.glass-card-gradient {
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: var(--tg-bg-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.neu-btn,
+.glass-btn,
+.btn-secondary {
+  padding: 0.625rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 500;
+  background-color: var(--tg-bg-secondary);
+  color: var(--tg-text-color);
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.neu-btn-primary,
+.glass-btn-primary,
+.btn-primary {
+  padding: 0.625rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 500;
+  color: white;
+  background-color: var(--tg-button-color);
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.neu-input,
+.glass-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  outline: none;
+  background-color: var(--tg-bg-secondary);
+  border: 1px solid transparent;
+  color: var(--tg-text-color);
+  transition: all 0.15s ease;
+}
+
+.neu-input::placeholder,
+.glass-input::placeholder {
+  color: var(--tg-text-secondary);
+}
+
+.neu-input:focus,
+.glass-input:focus {
+  border-color: var(--tg-link-color);
+  background-color: var(--tg-bg-color);
+}
+
+.neu-nav,
+.glass-nav {
+  background-color: var(--tg-bg-color);
+  border-top: 1px solid var(--tg-separator);
+}
+
+.neu-badge,
+.glass-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--tg-bg-secondary);
+  color: var(--tg-text-secondary);
+}
+
+.glass-stat {
+  padding: 0.75rem;
+  border-radius: 10px;
+  text-align: center;
+  background-color: var(--tg-bg-secondary);
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: var(--tg-bg-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Color utility overrides */
+.bg-tg-bg {
+  background-color: var(--tg-bg-color) !important;
+}
+
+.bg-tg-secondary-bg,
+.bg-tg-bg-secondary {
+  background-color: var(--tg-bg-secondary) !important;
+}
+
+.text-tg-text {
+  color: var(--tg-text-color) !important;
+}
+
+.text-tg-hint,
+.text-tg-text-secondary {
+  color: var(--tg-text-secondary) !important;
+}
+
+.text-tg-link {
+  color: var(--tg-link-color) !important;
+}
+
+.text-tg-success {
+  color: var(--tg-success) !important;
+}
+
+.text-tg-warning {
+  color: var(--tg-warning) !important;
+}
+
+.text-tg-error {
+  color: var(--tg-error) !important;
+}
+
+.text-accent {
+  color: var(--tg-link-color) !important;
+}
+
+.bg-tg-link\/10 {
+  background-color: rgba(42, 171, 238, 0.1) !important;
+}
+
+.bg-tg-success\/10 {
+  background-color: rgba(49, 181, 69, 0.1) !important;
+}
+
+.bg-tg-warning\/10 {
+  background-color: rgba(255, 160, 0, 0.1) !important;
+}
+
+.bg-tg-error\/10 {
+  background-color: rgba(229, 57, 53, 0.1) !important;
+}
+
+.border-tg-separator {
+  border-color: var(--tg-separator) !important;
+}
+
+/* Gradient text - simplified for light theme */
+.gradient-text {
+  color: var(--tg-link-color);
+}
+
+.gradient-text-purple {
+  color: #7C4DFF;
+}
+
+/* Border radius utilities */
+.rounded-tg {
+  border-radius: 10px !important;
+}
+
+.rounded-tg-md {
+  border-radius: 12px !important;
+}
+
+.rounded-tg-lg {
+  border-radius: 14px !important;
+}
+
+.rounded-t-tg-lg {
+  border-top-left-radius: 14px !important;
+  border-top-right-radius: 14px !important;
+}
+
+/* Shadow utilities */
+.shadow-tg {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+
+.shadow-tg-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.shadow-tg-elevated {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+
+/* Hide scrollbar on mobile, show thin scrollbar on desktop */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Show scrollbar on desktop for better UX */
+@media (min-width: 768px) {
+  .hide-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tg-text-secondary) transparent;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: block;
+    height: 6px;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--tg-text-secondary);
+    border-radius: 3px;
+    opacity: 0.5;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--tg-link-color);
+  }
+}
+
+/* Safe area for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Transitions */
+.transition-tg {
+  transition: all 0.15s ease-out;
+}
+
+/* Theme-aware surface colors */
+.bg-surface {
+  background-color: var(--tg-bg-secondary);
+}
+
+.bg-surface-elevated {
+  background-color: var(--tg-bg-color);
+}
+
+/* Light theme: override white transparency to black transparency */
+[data-theme="light"] .bg-white\/5,
+:root:not([data-theme="dark"]) .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] .bg-white\/10,
+:root:not([data-theme="dark"]) .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .border-white\/10,
+:root:not([data-theme="dark"]) .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .border-white\/20,
+:root:not([data-theme="dark"]) .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dark theme scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}

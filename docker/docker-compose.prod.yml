@@ -1,0 +1,244 @@
+# Production Docker Compose - Secure Configuration
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tam-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: telegram_ads
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    # No ports exposed - internal only
+
+  redis:
+    image: redis:7-alpine
+    container_name: tam-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --rename-command FLUSHALL ""
+      --rename-command FLUSHDB ""
+      --rename-command DEBUG ""
+      --rename-command CONFIG ""
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    # No ports exposed - internal only
+
+  api:
+    image: tam-api:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: tam-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/telegram_ads?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://web.telegram.org}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_BUCKET=${MINIO_BUCKET:-tam-avatars}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-}
+      - MTPROTO_URL=http://mtproto-worker:3001
+      - TON_MASTER_WALLET_MNEMONIC=${TON_MASTER_WALLET_MNEMONIC:-}
+      - TON_NETWORK=${TON_NETWORK:-mainnet}
+      - TON_API_KEY=${TON_API_KEY:-}
+      - MINI_APP_URL=${MINI_APP_URL:-https://sproutfolders.com}
+    networks:
+      - internal
+      - web
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      mtproto-worker:
+        condition: service_started
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    # API exposed only through nginx
+
+  bot:
+    image: tam-bot:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.bot
+    container_name: tam-bot
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/telegram_ads?schema=public
+      - BOT_TOKEN=${BOT_TOKEN}
+      - TELEGRAM_WEBAPP_URL=${MINI_APP_URL}
+    networks:
+      - internal
+      - web
+    depends_on:
+      postgres:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  workers:
+    image: tam-workers:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.workers
+    container_name: tam-workers
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/telegram_ads?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - TON_MASTER_WALLET_MNEMONIC=${TON_MASTER_WALLET_MNEMONIC:-}
+      - TON_NETWORK=${TON_NETWORK:-mainnet}
+      - TON_API_KEY=${TON_API_KEY:-}
+      - TON_ENDPOINT=${TON_ENDPOINT:-https://toncenter.com/api/v2/jsonRPC}
+      - BOT_TOKEN=${BOT_TOKEN:-}
+      - VERIFICATION_LOG_CHAT_ID=${VERIFICATION_LOG_CHAT_ID:-}
+    networks:
+      - internal
+      - web  # For external TON API access (toncenter.com)
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  mtproto-worker:
+    image: tam-mtproto:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mtproto
+    container_name: tam-mtproto
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/telegram_ads?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID:-}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
+      - TELEGRAM_SESSION=${TELEGRAM_SESSION:-}
+      - MTPROTO_PORT=3001
+    networks:
+      - internal
+      - web  # For external Telegram API access
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - mtproto_sessions:/app/sessions
+
+  nginx:
+    image: nginx:alpine
+    container_name: tam-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+      - nginx_cache:/var/cache/nginx
+    networks:
+      - web
+      - internal  # For MinIO access
+    depends_on:
+      - api
+      - minio
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/run
+
+  minio:
+    image: minio/minio:latest
+    container_name: tam-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  internal:
+    driver: bridge
+    internal: true  # No external access
+  web:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  mtproto_sessions:
+  minio_data:
+  nginx_cache:
