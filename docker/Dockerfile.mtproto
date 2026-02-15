@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-slim AS builder
+FROM node:25-slim AS builder
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN npx prisma@5.22.0 generate --schema=libs/prisma-client/prisma/schema.prisma
 RUN pnpm --filter @tam/mtproto-worker build
 
 # Production stage
-FROM node:20-slim AS production
+FROM node:25-slim AS production
 
 WORKDIR /app
 
