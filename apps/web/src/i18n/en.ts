@@ -535,6 +535,8 @@ export const en = {
       errorLink: 'Please enter a channel link',
       errorPrice: 'Please enter a valid price',
       errorCategory: 'Please select at least one category',
+      botAdminRequired: 'Before adding a channel, add our bot {bot} as a channel admin with permission to post messages.',
+      botNotAdminError: 'Bot {bot} is not a channel admin. Add the bot and try again.',
     },
     addFolder: {
       title: 'Add Folder',

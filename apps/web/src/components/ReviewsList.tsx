@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { Star, MessageSquare } from 'lucide-react';
 import { api } from '../api/client';
 import { Card } from './ui';
@@ -86,12 +85,9 @@ export function ReviewsList({ channelId }: ReviewsListProps) {
 
       {/* Reviews list */}
       <div className="space-y-4">
-        {data.items.map((review, index) => (
-          <motion.div
+        {data.items.map((review) => (
+          <div
             key={review.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
             className="p-4 rounded-xl bg-white/5"
           >
             <div className="flex items-start justify-between mb-2">
@@ -104,7 +100,7 @@ export function ReviewsList({ channelId }: ReviewsListProps) {
             {review.comment && (
               <p className="text-sm text-tg-hint mt-2">{review.comment}</p>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
     </Card>

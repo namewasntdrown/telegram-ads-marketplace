@@ -153,11 +153,7 @@ export function CampaignDetailsPage() {
     <PageTransition>
       <div className="p-4 pb-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-4"
-        >
+        <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => {
               hapticFeedback?.('light');
@@ -174,7 +170,7 @@ export function CampaignDetailsPage() {
             </p>
           </div>
           <StatusBadge status={campaign.status} />
-        </motion.div>
+        </div>
 
         <StaggerContainer className="space-y-4">
           {/* Budget Card */}

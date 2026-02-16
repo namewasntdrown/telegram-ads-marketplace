@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Clock,
@@ -348,11 +347,7 @@ export function DealDetailsPage() {
     <PageTransition>
       <div className="p-4 pb-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-4"
-        >
+        <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => {
               hapticFeedback?.('light');
@@ -367,7 +362,7 @@ export function DealDetailsPage() {
             <p className="text-sm text-tg-hint">ID: {deal.id.slice(0, 12)}...</p>
           </div>
           <StatusBadge status={deal.status} />
-        </motion.div>
+        </div>
 
         <StaggerContainer className="space-y-4">
           {/* Progress Steps */}

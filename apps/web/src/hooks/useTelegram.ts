@@ -61,6 +61,8 @@ interface TelegramWebApp {
     notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
     selectionChanged: () => void;
   };
+  requestFullscreen?: () => void;
+  isFullscreen?: boolean;
 }
 
 type HapticStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
@@ -76,6 +78,14 @@ export function useTelegram() {
       setWebApp(tg);
       tg.ready();
       tg.expand();
+      // Request fullscreen for newer Telegram clients
+      try {
+        if (typeof tg.requestFullscreen === 'function') {
+          tg.requestFullscreen();
+        }
+      } catch (e) {
+        // requestFullscreen not available in older clients
+      }
       setIsReady(true);
     } else {
       // Running outside Telegram - use mock for development

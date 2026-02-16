@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { ArrowLeft, FileText, Image, Video, Repeat, Clock, Ban, Megaphone, Save, Users, UserPlus, X } from 'lucide-react';
 import { api } from '../api/client';
 import { Card, Button, PageTransition } from '../components/ui';
@@ -279,11 +278,7 @@ export function ChannelSettingsPage() {
     <PageTransition>
       <div className="p-4">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-6"
-        >
+        <div className="flex items-center gap-3 mb-6">
           <Button
             variant="ghost"
             size="sm"
@@ -298,7 +293,7 @@ export function ChannelSettingsPage() {
             <h1 className="text-xl font-bold">Настройки канала</h1>
             <p className="text-sm text-tg-hint">{channel.title}</p>
           </div>
-        </motion.div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Categories */}

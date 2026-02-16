@@ -214,11 +214,7 @@ export function ChannelsPage() {
   return (
     <PageTransition>
       <div className="p-4">
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-4"
-        >
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-tg-text">{t.channels.title}</h1>
           <Button
             variant="primary"
@@ -231,14 +227,10 @@ export function ChannelsPage() {
             <Plus size={18} />
             {t.common.add}
           </Button>
-        </motion.div>
+        </div>
 
         {/* View Mode Toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex gap-2 mb-4"
-        >
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => {
               hapticSelection?.();
@@ -267,16 +259,11 @@ export function ChannelsPage() {
           >
             {t.channels.myChannels}
           </button>
-        </motion.div>
+        </div>
 
         {/* Search Bar - only for All Channels */}
         {viewMode === 'all' && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mb-3"
-          >
+          <div className="mb-3">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-tg-text-secondary" />
               <input
@@ -295,17 +282,12 @@ export function ChannelsPage() {
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Sort + Category Filter + Filter Button - only for All Channels */}
         {viewMode === 'all' && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex gap-2 pb-4 mb-4"
-          >
+          <div className="flex gap-2 pb-4 mb-4">
             {/* Sort Dropdown */}
             <select
               value={sortBy}
@@ -363,7 +345,7 @@ export function ChannelsPage() {
                 );
               })}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Filter Panel */}
@@ -767,15 +749,11 @@ export function ChannelsPage() {
 
         {/* Pagination - only for All Channels */}
         {viewMode === 'all' && data && data.totalPages > 1 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-center mt-6"
-          >
+          <div className="flex justify-center mt-6">
             <p className="text-sm text-tg-text-secondary tg-badge">
               {t.common.page} {data.page} {t.common.of} {data.totalPages}
             </p>
-          </motion.div>
+          </div>
         )}
       </div>
 

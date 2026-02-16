@@ -85,6 +85,15 @@ export class ChannelsService {
       throw new BadRequestException('Channel already registered');
     }
 
+    // Check if the bot is an admin of the channel
+    const isBotAdmin = await this.telegramBot.isBotAdminOfChannel(`@${username}`);
+    if (!isBotAdmin) {
+      const botUsername = await this.telegramBot.getBotUsername();
+      throw new BadRequestException(
+        `BOT_NOT_ADMIN:${botUsername}`,
+      );
+    }
+
     // Generate a unique negative telegramId as placeholder until MTProto worker resolves the real ID
     // Using negative numbers to avoid collision with real Telegram IDs
     const placeholderTelegramId = BigInt(-Date.now()) - BigInt(Math.floor(Math.random() * 1000000));

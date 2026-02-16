@@ -91,42 +91,20 @@ export function ProfilePage() {
     { icon: Shield, label: t.profile.security, path: '/profile/security', color: 'text-tg-success', bgColor: 'bg-tg-success/10' },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.06 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } }
-  };
-
   return (
     <PageTransition>
       <div className="p-4 pb-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-5"
-        >
+        <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-2xl font-bold text-tg-text">{t.profile.title}</h1>
             <p className="text-sm text-tg-text-secondary mt-0.5">{t.profile.subtitle}</p>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-3"
-        >
+        <div className="space-y-3">
           {/* User Card with Avatar */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="tg-card-elevated">
               <div className="flex items-center gap-4">
                 <motion.div
@@ -159,10 +137,10 @@ export function ProfilePage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Balance Card */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="tg-card-elevated">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -184,18 +162,18 @@ export function ProfilePage() {
                 <span>{balance?.frozen ?? user?.frozenTon ?? '0'} TON {t.profile.inEscrow}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Wallet Connection with TonConnect Proof */}
-          <motion.div variants={itemVariants}>
+          <div>
             <WalletButton
               onDeposit={() => setShowDepositModal(true)}
               onWithdraw={() => setShowWithdrawModal(true)}
             />
-          </motion.div>
+          </div>
 
           {/* Quick Actions */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="grid grid-cols-2 gap-3">
               <Link to="/channels" onClick={() => hapticFeedback?.('light')}>
                 <motion.div
@@ -222,10 +200,10 @@ export function ProfilePage() {
                 </motion.div>
               </Link>
             </div>
-          </motion.div>
+          </div>
 
           {/* Stats Grid */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="tg-card">
               <div className="flex items-center gap-2 mb-3">
                 <User size={16} className="text-tg-link" />
@@ -275,10 +253,10 @@ export function ProfilePage() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Transactions */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="tg-card">
               <div className="flex items-center gap-2 mb-3">
                 <Clock size={16} className="text-tg-text-secondary" />
@@ -305,15 +283,12 @@ export function ProfilePage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {transactions?.items.slice(0, 5).map((tx, index) => {
+                  {transactions?.items.slice(0, 5).map((tx) => {
                     const config = txTypeConfig[tx.type] || txTypeConfig.FEE;
                     const Icon = config.icon;
                     return (
-                      <motion.div
+                      <div
                         key={tx.id}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.04 }}
                         className="flex items-center justify-between p-2.5 rounded-tg bg-tg-bg-secondary"
                       >
                         <div className="flex items-center gap-3">
@@ -329,31 +304,26 @@ export function ProfilePage() {
                           <p className={`font-semibold ${config.color}`}>{config.sign}{tx.amount} TON</p>
                           <p className="text-xs text-tg-text-secondary">{tx.status}</p>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Settings */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="tg-card">
               <h2 className="font-semibold text-tg-text mb-3">{t.profile.settings}</h2>
               <div className="space-y-1">
-                {settingsItems.map((item, index) => (
+                {settingsItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => hapticFeedback?.('light')}
                   >
-                    <motion.div
-                      initial={{ opacity: 0, x: -16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.04 }}
-                      className="flex items-center justify-between p-2.5 rounded-tg hover:bg-tg-bg-secondary transition-colors"
-                    >
+                    <div className="flex items-center justify-between p-2.5 rounded-tg hover:bg-tg-bg-secondary transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-tg ${item.bgColor} flex items-center justify-center`}>
                           <item.icon size={18} className={item.color} />
@@ -361,16 +331,11 @@ export function ProfilePage() {
                         <span className="text-tg-text">{item.label}</span>
                       </div>
                       <ChevronRight size={18} className="text-tg-text-secondary" />
-                    </motion.div>
+                    </div>
                   </Link>
                 ))}
                 {/* Language Switcher */}
-                <motion.div
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.12 }}
-                  className="flex items-center justify-between p-2.5 rounded-tg"
-                >
+                <div className="flex items-center justify-between p-2.5 rounded-tg">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-tg bg-purple-500/10 flex items-center justify-center">
                       <Globe size={18} className="text-purple-500" />
@@ -405,13 +370,13 @@ export function ProfilePage() {
                       RU
                     </button>
                   </div>
-                </motion.div>
+                </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* App Info */}
-          <motion.div variants={itemVariants}>
+          <div>
             <div className="tg-card">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-tg-text-secondary">{t.profile.version}</span>
@@ -422,9 +387,9 @@ export function ProfilePage() {
                 <span className="text-tg-link font-medium">{user?.role}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-        </motion.div>
+        </div>
       </div>
 
       {/* Deposit Modal */}

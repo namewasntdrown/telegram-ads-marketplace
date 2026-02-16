@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
 
 interface CardProps {
   children: ReactNode;
@@ -14,7 +13,6 @@ export function Card({
   variant = 'default',
   className = '',
   onClick,
-  animate = true
 }: CardProps) {
   const variantClasses = {
     default: 'tg-card',
@@ -23,24 +21,12 @@ export function Card({
     flat: 'tg-card-flat',
   };
 
-  const content = (
+  return (
     <div
       className={`${variantClasses[variant]} ${className}`}
       onClick={onClick}
     >
       {children}
     </div>
-  );
-
-  if (!animate) return content;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      {content}
-    </motion.div>
   );
 }

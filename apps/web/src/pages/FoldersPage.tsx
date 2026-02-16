@@ -151,11 +151,7 @@ export function FoldersPage() {
   return (
     <PageTransition>
       <div className="p-4">
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-4"
-        >
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-tg-text">{t.folders.title}</h1>
           <Button
             variant="primary"
@@ -168,14 +164,10 @@ export function FoldersPage() {
             <Plus size={18} />
             {t.common.add}
           </Button>
-        </motion.div>
+        </div>
 
         {/* View Mode Toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex gap-2 mb-4"
-        >
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => {
               hapticSelection?.();
@@ -204,16 +196,11 @@ export function FoldersPage() {
           >
             {t.folders.myFolders}
           </button>
-        </motion.div>
+        </div>
 
         {/* Category Filter - only for All Folders */}
         {viewMode === 'all' && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex gap-2 overflow-x-auto pb-4 mb-4 hide-scrollbar"
-          >
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-4 hide-scrollbar">
             {categories.map((cat) => {
               const isActive = selectedCategory === cat.id;
               return (
@@ -232,7 +219,7 @@ export function FoldersPage() {
                 </motion.button>
               );
             })}
-          </motion.div>
+          </div>
         )}
 
         {/* Loading State */}
@@ -418,15 +405,11 @@ export function FoldersPage() {
 
         {/* Pagination - only for 'all' view */}
         {viewMode === 'all' && data && data.totalPages > 1 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-center mt-6"
-          >
+          <div className="flex justify-center mt-6">
             <p className="text-sm text-tg-text-secondary tg-badge">
               {t.common.page} {data.page} {t.common.of} {data.totalPages}
             </p>
-          </motion.div>
+          </div>
         )}
       </div>
 

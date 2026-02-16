@@ -110,11 +110,7 @@ export function NotificationsPage() {
     <PageTransition>
       <div className="p-4 pb-24">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-5"
-        >
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -142,7 +138,7 @@ export function NotificationsPage() {
               {t.notifications.readAll}
             </motion.button>
           )}
-        </motion.div>
+        </div>
 
         {/* Loading */}
         {isLoading && (
@@ -164,17 +160,13 @@ export function NotificationsPage() {
 
         {/* Empty */}
         {!isLoading && notifications.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="tg-card text-center py-12"
-          >
+          <div className="tg-card text-center py-12">
             <div className="w-16 h-16 mx-auto rounded-full bg-tg-bg-secondary flex items-center justify-center mb-4">
               <Bell size={28} className="text-tg-text-secondary" />
             </div>
             <p className="font-semibold text-tg-text mb-1">{t.notifications.empty}</p>
             <p className="text-sm text-tg-text-secondary">{t.notifications.emptyHint}</p>
-          </motion.div>
+          </div>
         )}
 
         {/* List */}

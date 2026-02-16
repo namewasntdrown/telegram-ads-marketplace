@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Clock, Radio, FolderOpen, ExternalLink, Scale, AlertTriangle } from 'lucide-react';
 import { api } from '../api/client';
 import { Card, Button, PageTransition, StaggerContainer, StaggerItem } from '../components/ui';
@@ -186,23 +185,15 @@ export function ModerationPage() {
   return (
     <PageTransition>
       <div className="p-4">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4"
-        >
+        <div className="mb-4">
           <h1 className="text-xl font-bold">
             <span className="gradient-text">{t.moderation.title}</span>
           </h1>
           <p className="text-sm text-tg-hint mt-1">{t.moderation.subtitle}</p>
-        </motion.div>
+        </div>
 
         {/* Tab Toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex gap-2 mb-4"
-        >
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => {
               hapticSelection?.();
@@ -245,7 +236,7 @@ export function ModerationPage() {
             <Scale size={14} />
             {t.moderation.appeals} ({pendingAppeals.length})
           </button>
-        </motion.div>
+        </div>
 
         {/* Loading */}
         {isLoading && (

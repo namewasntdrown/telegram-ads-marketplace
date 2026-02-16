@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { FileText, Clock, CheckCircle, AlertCircle, XCircle, DollarSign, ChevronRight } from 'lucide-react';
 import { api } from '../api/client';
 import { Card, Button, StatusBadge, CardSkeleton, PageTransition, SegmentedControl, StaggerContainer, StaggerItem } from '../components/ui';
@@ -60,9 +59,9 @@ export function DealsPage() {
   return (
     <PageTransition>
       <div className="p-4">
-        <motion.h1 initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="text-xl font-bold text-tg-text mb-4">
+        <h1 className="text-xl font-bold text-tg-text mb-4">
           {t.deals.title}
-        </motion.h1>
+        </h1>
 
         <SegmentedControl
           options={[

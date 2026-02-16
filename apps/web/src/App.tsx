@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useTelegram } from './hooks/useTelegram';
 import { useAuthStore } from './store/auth.store';
@@ -18,7 +18,44 @@ import { LoginPage } from './pages/LoginPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { BriefsPage } from './pages/BriefsPage';
 
-const BUILD_VERSION = 'v10-fullscreen-fixes';
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('ErrorBoundary caught:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[100dvh] p-6 text-center bg-tg-bg-secondary">
+          <p className="text-lg font-medium text-tg-text mb-2">Something went wrong</p>
+          <p className="text-sm text-tg-text-secondary mb-4">An unexpected error occurred.</p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.reload();
+            }}
+            className="tg-btn-primary px-6 py-2"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const BUILD_VERSION = 'v11-responsive-fullscreen';
 console.log('App build:', BUILD_VERSION);
 
 export function App() {
@@ -46,6 +83,13 @@ export function App() {
     if (webApp) {
       webApp.ready();
       webApp.expand();
+      try {
+        if (typeof (webApp as any).requestFullscreen === 'function') {
+          (webApp as any).requestFullscreen();
+        }
+      } catch (e) {
+        // requestFullscreen not available
+      }
     }
   }, [webApp]);
 
@@ -68,21 +112,23 @@ export function App() {
   return (
     <BrowserRouter>
       <Layout>
-        <Routes>
-          <Route path="/" element={<ProfilePage />} />
-          <Route path="/channels" element={<ChannelsPage />} />
-          <Route path="/channels/:id/settings" element={<ChannelSettingsPage />} />
-          <Route path="/channels/:id" element={<ChannelDetailsPage />} />
-          <Route path="/folders" element={<FoldersPage />} />
-          <Route path="/folders/:id" element={<FolderDetailsPage />} />
-          <Route path="/briefs" element={<BriefsPage />} />
-          <Route path="/campaigns" element={<CampaignsPage />} />
-          <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
-          <Route path="/deals" element={<DealsPage />} />
-          <Route path="/deals/:id" element={<DealDetailsPage />} />
-          <Route path="/profile/notifications" element={<NotificationsPage />} />
-          <Route path="/moderation" element={<ModerationPage />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<ProfilePage />} />
+            <Route path="/channels" element={<ChannelsPage />} />
+            <Route path="/channels/:id/settings" element={<ChannelSettingsPage />} />
+            <Route path="/channels/:id" element={<ChannelDetailsPage />} />
+            <Route path="/folders" element={<FoldersPage />} />
+            <Route path="/folders/:id" element={<FolderDetailsPage />} />
+            <Route path="/briefs" element={<BriefsPage />} />
+            <Route path="/campaigns" element={<CampaignsPage />} />
+            <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
+            <Route path="/deals" element={<DealsPage />} />
+            <Route path="/deals/:id" element={<DealDetailsPage />} />
+            <Route path="/profile/notifications" element={<NotificationsPage />} />
+            <Route path="/moderation" element={<ModerationPage />} />
+          </Routes>
+        </ErrorBoundary>
       </Layout>
     </BrowserRouter>
   );

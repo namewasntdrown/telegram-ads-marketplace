@@ -5,6 +5,8 @@ import { api } from '../api/client';
 import { useTelegram } from '../hooks/useTelegram';
 import { useTranslation } from '../i18n';
 
+const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME as string || 'bot';
+
 interface AddChannelModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,6 +17,7 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
   const [pricePerPost, setPricePerPost] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [botNotAdmin, setBotNotAdmin] = useState<string | null>(null);
 
   const { hapticNotification, hapticSelection } = useTelegram();
   const queryClient = useQueryClient();
@@ -47,7 +50,15 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
     },
     onError: (err: Error) => {
       hapticNotification?.('error');
-      setError(err.message);
+      const msg = err.message || '';
+      if (msg.startsWith('BOT_NOT_ADMIN:')) {
+        const botName = msg.split(':')[1] || BOT_USERNAME;
+        setBotNotAdmin(botName);
+        setError(null);
+      } else {
+        setBotNotAdmin(null);
+        setError(msg);
+      }
     },
   });
 
@@ -56,6 +67,7 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
     setPricePerPost('');
     setSelectedCategories([]);
     setError(null);
+    setBotNotAdmin(null);
   };
 
   const handleCategoryToggle = (catId: string) => {
@@ -72,6 +84,7 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setBotNotAdmin(null);
 
     if (!link.trim()) {
       setError(t.modals.addChannel.errorLink);
@@ -99,6 +112,14 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
           <span className="text-emerald-400 text-lg">{t.modals.addChannel.free}</span>
           <span className="text-sm text-emerald-300/80">
             {t.modals.addChannel.freeDescription}
+          </span>
+        </div>
+
+        {/* Bot Admin Requirement Notice */}
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <span className="text-amber-400 text-lg mt-0.5">⚠️</span>
+          <span className="text-sm text-amber-300/80">
+            {t.modals.addChannel.botAdminRequired.replace('{bot}', `@${BOT_USERNAME}`)}
           </span>
         </div>
 
@@ -161,6 +182,15 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
             })}
           </div>
         </div>
+
+        {/* Bot Not Admin Error */}
+        {botNotAdmin && (
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+            <p className="text-sm text-red-400">
+              {t.modals.addChannel.botNotAdminError.replace('{bot}', botNotAdmin)}
+            </p>
+          </div>
+        )}
 
         {/* Error */}
         {error && (

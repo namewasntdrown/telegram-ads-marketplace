@@ -116,21 +116,12 @@ export function BriefsPage() {
     <PageTransition>
       <div className="p-4">
         {/* Header */}
-        <motion.h1
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-xl font-bold text-tg-text mb-4"
-        >
+        <h1 className="text-xl font-bold text-tg-text mb-4">
           {t.briefs.title}
-        </motion.h1>
+        </h1>
 
         {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.03 }}
-          className="relative mb-3"
-        >
+        <div className="relative mb-3">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-tg-text-secondary" />
           <input
             type="text"
@@ -139,15 +130,10 @@ export function BriefsPage() {
             placeholder={t.briefs.searchPlaceholder}
             className="w-full pl-10 pr-4 py-2.5 rounded-tg bg-tg-bg-secondary text-sm text-tg-text placeholder-tg-text-secondary focus:outline-none focus:ring-1 focus:ring-tg-link"
           />
-        </motion.div>
+        </div>
 
         {/* Sort Chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.04 }}
-          className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-2"
-        >
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-2">
           {([
             { key: 'newest' as const, label: t.briefs.sortNewest },
             { key: 'budget_high' as const, label: t.briefs.sortBudgetHigh },
@@ -166,15 +152,10 @@ export function BriefsPage() {
               {s.label}
             </motion.button>
           ))}
-        </motion.div>
+        </div>
 
         {/* Category Filter Chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-2"
-        >
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-2">
           {CATEGORIES.map((cat) => {
             const isActive = selectedCategories.includes(cat.id);
             return (
@@ -193,15 +174,10 @@ export function BriefsPage() {
               </motion.button>
             );
           })}
-        </motion.div>
+        </div>
 
         {/* Language Filter Chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.06 }}
-          className="flex gap-2 overflow-x-auto hide-scrollbar pb-3 mb-4"
-        >
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-3 mb-4">
           {LANGUAGES.map((lang) => {
             const isActive = selectedLanguages.includes(lang.id);
             return (
@@ -220,7 +196,7 @@ export function BriefsPage() {
               </motion.button>
             );
           })}
-        </motion.div>
+        </div>
 
         {/* Loading */}
         {isLoading && (
@@ -339,11 +315,7 @@ export function BriefsPage() {
 
         {/* Pagination */}
         {data && data.totalPages > 1 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-4 mt-6"
-          >
+          <div className="flex items-center justify-center gap-4 mt-6">
             <Button
               variant="secondary"
               size="sm"
@@ -369,7 +341,7 @@ export function BriefsPage() {
             >
               <ChevronRight size={16} />
             </Button>
-          </motion.div>
+          </div>
         )}
       </div>
 

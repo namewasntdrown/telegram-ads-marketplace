@@ -46,7 +46,7 @@ export function CampaignsPage() {
   return (
     <PageTransition>
       <div className="p-4">
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-bold text-tg-text">{t.campaigns.title}</h1>
           <Button
             variant="primary"
@@ -58,7 +58,7 @@ export function CampaignsPage() {
           >
             <Plus size={18} /> {t.common.add}
           </Button>
-        </motion.div>
+        </div>
 
         {isLoading && <div className="space-y-3">{[1, 2, 3].map((i) => <CardSkeleton key={i} />)}</div>}
 

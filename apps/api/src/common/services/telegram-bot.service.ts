@@ -123,6 +123,42 @@ export class TelegramBotService {
     }
   }
 
+  async getBotUsername(): Promise<string> {
+    try {
+      const res = await fetch(`${this.baseUrl}/getMe`);
+      const data = (await res.json()) as TelegramResponse<{ id: number; username: string }>;
+      return data.ok && data.result ? `@${data.result.username}` : 'bot';
+    } catch {
+      return 'bot';
+    }
+  }
+
+  async isBotAdminOfChannel(chatId: string | number): Promise<boolean> {
+    try {
+      // Get bot's own user ID
+      const meRes = await fetch(`${this.baseUrl}/getMe`);
+      const meData = (await meRes.json()) as TelegramResponse<{ id: number }>;
+      if (!meData.ok || !meData.result) return false;
+
+      const botUserId = meData.result.id;
+
+      // Check bot's membership in the channel
+      const res = await fetch(`${this.baseUrl}/getChatMember`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, user_id: botUserId }),
+      });
+      const data = (await res.json()) as TelegramResponse<{ status: string }>;
+
+      if (!data.ok || !data.result) return false;
+
+      return ['administrator', 'creator'].includes(data.result.status);
+    } catch (error) {
+      this.logger.error(`Bot admin check failed for ${chatId}: ${error}`);
+      return false;
+    }
+  }
+
   async downloadChannelPhoto(chatId: string | number): Promise<Buffer | null> {
     try {
       const chat = await this.getChat(chatId);
