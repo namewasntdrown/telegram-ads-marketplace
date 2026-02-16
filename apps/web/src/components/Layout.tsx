@@ -12,7 +12,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { hapticFeedback } = useTelegram();
+  const { hapticFeedback, isFullscreen } = useTelegram();
   const { user } = useAuthStore();
   const { t } = useTranslation();
 
@@ -42,7 +42,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-tg-bg-secondary relative">
-      <main className="flex-1 pb-20 safe-area-top">{children}</main>
+      <main className={`flex-1 pb-20 ${isFullscreen ? 'fullscreen-top-offset' : 'safe-area-top'}`}>{children}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 tg-nav px-2 py-2 safe-area-bottom md:max-w-[480px] md:mx-auto">
         <div className="flex justify-around items-center max-w-lg mx-auto">

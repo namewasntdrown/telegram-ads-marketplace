@@ -63,6 +63,7 @@ interface TelegramWebApp {
   };
   requestFullscreen?: () => void;
   isFullscreen?: boolean;
+  disableVerticalSwipes?: () => void;
 }
 
 type HapticStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
@@ -71,6 +72,7 @@ type NotificationType = 'error' | 'success' | 'warning';
 export function useTelegram() {
   const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -78,10 +80,20 @@ export function useTelegram() {
       setWebApp(tg);
       tg.ready();
       tg.expand();
+      // Disable vertical swipes to prevent app collapse (Bot API 7.7+)
+      try {
+        if (typeof tg.disableVerticalSwipes === 'function') {
+          tg.disableVerticalSwipes();
+        }
+      } catch (e) {
+        // disableVerticalSwipes not available in older clients
+      }
       // Request fullscreen for newer Telegram clients
       try {
         if (typeof tg.requestFullscreen === 'function') {
           tg.requestFullscreen();
+          // Check if fullscreen was activated
+          setIsFullscreen(tg.isFullscreen === true);
         }
       } catch (e) {
         // requestFullscreen not available in older clients
@@ -159,6 +171,7 @@ export function useTelegram() {
   return {
     webApp,
     isReady,
+    isFullscreen,
     initData: webApp?.initData ?? '',
     user: webApp?.initDataUnsafe?.user,
     colorScheme: webApp?.colorScheme ?? 'light',
