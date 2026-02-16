@@ -20,29 +20,55 @@ import { BriefsPage } from './pages/BriefsPage';
 
 interface ErrorBoundaryState {
   hasError: boolean;
+  retryCount: number;
+  isAutoRetrying: boolean;
 }
 
 class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false };
+  state: ErrorBoundaryState = { hasError: false, retryCount: 0, isAutoRetrying: false };
+  private autoRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
-  static getDerivedStateFromError(): ErrorBoundaryState {
+  static getDerivedStateFromError(): Partial<ErrorBoundaryState> {
     return { hasError: true };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info);
+    // Auto-retry once after 1.5s
+    if (this.state.retryCount === 0) {
+      this.setState({ isAutoRetrying: true });
+      this.autoRetryTimer = setTimeout(() => {
+        this.setState((prev) => ({
+          hasError: false,
+          retryCount: prev.retryCount + 1,
+          isAutoRetrying: false,
+        }));
+      }, 1500);
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.autoRetryTimer) clearTimeout(this.autoRetryTimer);
   }
 
   render() {
     if (this.state.hasError) {
+      // Show spinner during auto-retry
+      if (this.state.isAutoRetrying) {
+        return (
+          <div className="flex items-center justify-center min-h-[100dvh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tg-button"></div>
+          </div>
+        );
+      }
+      // Auto-retry failed, show manual retry button
       return (
         <div className="flex flex-col items-center justify-center min-h-[100dvh] p-6 text-center bg-tg-bg-secondary">
           <p className="text-lg font-medium text-tg-text mb-2">Something went wrong</p>
           <p className="text-sm text-tg-text-secondary mb-4">An unexpected error occurred.</p>
           <button
             onClick={() => {
-              this.setState({ hasError: false });
-              window.location.reload();
+              this.setState({ hasError: false, retryCount: 0, isAutoRetrying: false });
             }}
             className="tg-btn-primary px-6 py-2"
           >
@@ -92,6 +118,28 @@ export function App() {
       }
     }
   }, [webApp]);
+
+  // Prevent swipe-down from collapsing the Telegram Mini App
+  useEffect(() => {
+    let startY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      const scrollTop = document.getElementById('root')?.scrollTop ?? 0;
+      // If at top of scroll and swiping down, prevent default
+      if (scrollTop <= 0 && currentY > startY) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
 
   const isTelegramMiniApp = Boolean(webApp && initData);
 

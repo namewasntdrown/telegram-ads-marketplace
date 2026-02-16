@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Eye, Plus, Zap, Clock, CheckCircle, XCircle, ShoppingCart, ChevronRight, FileText, Image as ImageIcon, Video, Repeat, Ban, Megaphone, Star, SlidersHorizontal, X, Search, Scale } from 'lucide-react';
 import { api } from '../api/client';
-import { Card, Button, ChannelCardSkeleton, PageTransition, StaggerContainer, StaggerItem } from '../components/ui';
+import { Card, Button, ChannelCardSkeleton, PageTransition, StaggerContainer, StaggerItem, ErrorCard } from '../components/ui';
 import { useTelegram } from '../hooks/useTelegram';
 import { useAuthStore } from '../store/auth.store';
 import { AddChannelModal } from '../components/AddChannelModal';
@@ -118,7 +118,7 @@ export function ChannelsPage() {
     }
   }, [searchParams]);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['channels', selectedCategory, searchDebounced, sortBy, filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -136,7 +136,7 @@ export function ChannelsPage() {
     enabled: viewMode === 'all',
   });
 
-  const { data: myChannels, isLoading: isLoadingMy, error: errorMy } = useQuery({
+  const { data: myChannels, isLoading: isLoadingMy, error: errorMy, refetch: refetchMy, isRefetching: isRefetchingMy } = useQuery({
     queryKey: ['my-channels'],
     queryFn: async () => {
       const response = await api.get<Channel[]>('/channels/my/channels');
@@ -474,10 +474,10 @@ export function ChannelsPage() {
 
         {/* Error State */}
         {currentError && (
-          <Card className="text-center py-8">
-            <p className="text-tg-error font-medium">{t.errors.failedToLoad}</p>
-            <p className="text-sm text-tg-text-secondary mt-1">{t.errors.tryAgain}</p>
-          </Card>
+          <ErrorCard
+            onRetry={() => viewMode === 'all' ? refetch() : refetchMy()}
+            isRetrying={viewMode === 'all' ? isRefetching : isRefetchingMy}
+          />
         )}
 
         {/* Empty State */}

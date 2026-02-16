@@ -6,3 +6,4 @@ export { AnimatedCounter, BalanceDisplay } from './AnimatedCounter';
 export { PageTransition, StaggerContainer, StaggerItem } from './PageTransition';
 export { SegmentedControl } from './SegmentedControl';
 export { Modal } from './Modal';
+export { ErrorCard } from './ErrorCard';

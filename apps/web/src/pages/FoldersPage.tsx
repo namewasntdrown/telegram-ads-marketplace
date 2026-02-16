@@ -4,7 +4,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FolderOpen, Plus, Zap, Clock, CheckCircle, XCircle, DollarSign, Scale } from 'lucide-react';
 import { api } from '../api/client';
-import { Card, Button, CardSkeleton, PageTransition, StaggerContainer, StaggerItem } from '../components/ui';
+import { Card, Button, CardSkeleton, PageTransition, StaggerContainer, StaggerItem, ErrorCard } from '../components/ui';
 import { useTelegram } from '../hooks/useTelegram';
 import { useAuthStore } from '../store/auth.store';
 import { AddFolderModal } from '../components/AddFolderModal';
@@ -72,7 +72,7 @@ export function FoldersPage() {
     }
   }, [searchParams]);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['folders', selectedCategory],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -83,7 +83,7 @@ export function FoldersPage() {
     enabled: viewMode === 'all',
   });
 
-  const { data: myFolders, isLoading: isLoadingMy, error: errorMy } = useQuery({
+  const { data: myFolders, isLoading: isLoadingMy, error: errorMy, refetch: refetchMy, isRefetching: isRefetchingMy } = useQuery({
     queryKey: ['my-folders'],
     queryFn: async () => {
       const response = await api.get<Folder[]>('/folders/my/folders');
@@ -233,10 +233,10 @@ export function FoldersPage() {
 
         {/* Error State */}
         {currentError && (
-          <Card className="text-center py-8">
-            <p className="text-tg-error font-medium">{t.errors.failedToLoad}</p>
-            <p className="text-sm text-tg-text-secondary mt-1">{t.errors.tryAgain}</p>
-          </Card>
+          <ErrorCard
+            onRetry={() => viewMode === 'all' ? refetch() : refetchMy()}
+            isRetrying={viewMode === 'all' ? isRefetching : isRefetchingMy}
+          />
         )}
 
         {/* Empty State */}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Megaphone, ChevronRight } from 'lucide-react';
 import { api } from '../api/client';
-import { Card, Button, StatusBadge, CardSkeleton, PageTransition, StaggerContainer, StaggerItem } from '../components/ui';
+import { Card, Button, StatusBadge, CardSkeleton, PageTransition, StaggerContainer, StaggerItem, ErrorCard } from '../components/ui';
 import { useTelegram } from '../hooks/useTelegram';
 import { AddCampaignModal } from '../components/AddCampaignModal';
 import { useTranslation } from '../i18n';
@@ -29,7 +29,7 @@ export function CampaignsPage() {
   const { hapticFeedback } = useTelegram();
   const { t } = useTranslation();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['campaigns'],
     queryFn: async () => {
       const response = await api.get<PaginatedCampaigns>('/campaigns');
@@ -63,9 +63,7 @@ export function CampaignsPage() {
         {isLoading && <div className="space-y-3">{[1, 2, 3].map((i) => <CardSkeleton key={i} />)}</div>}
 
         {error && (
-          <Card className="text-center py-8">
-            <p className="text-tg-error font-medium">{t.errors.failedToLoad}</p>
-          </Card>
+          <ErrorCard onRetry={() => refetch()} isRetrying={isRefetching} />
         )}
 
         {data && data.items.length === 0 && (

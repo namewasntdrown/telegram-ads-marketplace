@@ -11,7 +11,8 @@ import './index.css';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 3,
+      retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 10000),
       refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 2, // Data fresh for 2 minutes
       gcTime: 1000 * 60 * 10, // Keep unused data for 10 minutes

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, CheckCircle, AlertCircle, XCircle, DollarSign, ChevronRight } from 'lucide-react';
 import { api } from '../api/client';
-import { Card, Button, StatusBadge, CardSkeleton, PageTransition, SegmentedControl, StaggerContainer, StaggerItem } from '../components/ui';
+import { Card, Button, StatusBadge, CardSkeleton, PageTransition, SegmentedControl, StaggerContainer, StaggerItem, ErrorCard } from '../components/ui';
 import { useTelegram } from '../hooks/useTelegram';
 import { useTranslation } from '../i18n';
 
@@ -48,7 +48,7 @@ export function DealsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['deals', role],
     queryFn: async () => {
       const response = await api.get<PaginatedDeals>(`/deals?role=${role}`);
@@ -76,10 +76,7 @@ export function DealsPage() {
         {isLoading && <div className="space-y-3">{[1, 2, 3].map((i) => <CardSkeleton key={i} />)}</div>}
 
         {error && (
-          <Card className="text-center py-8">
-            <AlertCircle size={36} className="mx-auto text-tg-error mb-2" />
-            <p className="font-medium text-tg-error">{t.errors.failedToLoad}</p>
-          </Card>
+          <ErrorCard onRetry={() => refetch()} isRetrying={isRefetching} />
         )}
 
         {data && data.items.length === 0 && (

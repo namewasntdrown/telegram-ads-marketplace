@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { FileText, Users, ChevronLeft, ChevronRight, Globe, Tag, Search } from 'lucide-react';
 import { api } from '../api/client';
-import { Card, Button, CardSkeleton, PageTransition, StaggerContainer, StaggerItem } from '../components/ui';
+import { Card, Button, CardSkeleton, PageTransition, StaggerContainer, StaggerItem, ErrorCard } from '../components/ui';
 import { useTelegram } from '../hooks/useTelegram';
 import { useTranslation } from '../i18n';
 import { ApplyToBriefModal } from '../components/ApplyToBriefModal';
@@ -75,7 +75,7 @@ export function BriefsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['public-campaigns', page, selectedCategories, selectedLanguages, debouncedSearch, sortBy],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -209,9 +209,7 @@ export function BriefsPage() {
 
         {/* Error */}
         {error && (
-          <Card className="text-center py-8">
-            <p className="text-tg-error font-medium">{t.errors.failedToLoad}</p>
-          </Card>
+          <ErrorCard onRetry={() => refetch()} isRetrying={isRefetching} />
         )}
 
         {/* Empty State */}
