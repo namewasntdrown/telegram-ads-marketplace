@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "dompurify": "^3.0.0",
-    "jsdom": "^24.0.0"
+    "jsdom": "^28.1.0"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.0",
