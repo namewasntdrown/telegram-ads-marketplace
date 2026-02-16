@@ -381,6 +381,15 @@ export class AddChannelAdminDto {
   username: string;
 }
 
+export class CheckBotAdminDto {
+  @ApiProperty({
+    description: 'Channel link (@username, t.me/username, or https://t.me/username)',
+    example: '@mychannel',
+  })
+  @IsString()
+  link: string;
+}
+
 export class VerifiedStatsResponseDto {
   @ApiProperty({ description: 'Whether verified stats are available' })
   hasVerifiedStats: boolean;

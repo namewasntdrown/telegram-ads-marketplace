@@ -5,7 +5,7 @@ import { api } from '../api/client';
 import { useTelegram } from '../hooks/useTelegram';
 import { useTranslation } from '../i18n';
 
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME as string || 'bot';
+const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME as string || 'devsproutfolders_bot';
 
 interface AddChannelModalProps {
   isOpen: boolean;
@@ -17,7 +17,8 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
   const [pricePerPost, setPricePerPost] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [botNotAdmin, setBotNotAdmin] = useState<string | null>(null);
+  const [botAdminChecked, setBotAdminChecked] = useState(false);
+  const [botIsAdmin, setBotIsAdmin] = useState(false);
 
   const { hapticNotification, hapticSelection } = useTelegram();
   const queryClient = useQueryClient();
@@ -31,6 +32,32 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
     { id: 'crypto', label: t.categories.crypto, emoji: '₿' },
     { id: 'lifestyle', label: t.categories.lifestyle, emoji: '🌟' },
   ];
+
+  const checkBotAdminMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.post<{ isAdmin: boolean; botUsername: string }>(
+        '/channels/check-bot-admin',
+        { link }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setBotAdminChecked(true);
+      setBotIsAdmin(data.isAdmin);
+      if (data.isAdmin) {
+        hapticNotification?.('success');
+        setError(null);
+      } else {
+        hapticNotification?.('error');
+      }
+    },
+    onError: (err: Error) => {
+      hapticNotification?.('error');
+      setBotAdminChecked(false);
+      setBotIsAdmin(false);
+      setError(err.message || t.errors.somethingWentWrong);
+    },
+  });
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -52,11 +79,10 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
       hapticNotification?.('error');
       const msg = err.message || '';
       if (msg.startsWith('BOT_NOT_ADMIN:')) {
-        const botName = msg.split(':')[1] || BOT_USERNAME;
-        setBotNotAdmin(botName);
+        setBotIsAdmin(false);
+        setBotAdminChecked(true);
         setError(null);
       } else {
-        setBotNotAdmin(null);
         setError(msg);
       }
     },
@@ -67,7 +93,8 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
     setPricePerPost('');
     setSelectedCategories([]);
     setError(null);
-    setBotNotAdmin(null);
+    setBotAdminChecked(false);
+    setBotIsAdmin(false);
   };
 
   const handleCategoryToggle = (catId: string) => {
@@ -81,13 +108,35 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
     );
   };
 
+  const handleCheckBotAdmin = () => {
+    setError(null);
+    if (!link.trim()) {
+      setError(t.modals.addChannel.errorLink);
+      return;
+    }
+    checkBotAdminMutation.mutate();
+  };
+
+  const handleLinkChange = (value: string) => {
+    setLink(value);
+    // Reset bot admin check when link changes
+    if (botAdminChecked) {
+      setBotAdminChecked(false);
+      setBotIsAdmin(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setBotNotAdmin(null);
 
     if (!link.trim()) {
       setError(t.modals.addChannel.errorLink);
+      return;
+    }
+
+    if (!botIsAdmin) {
+      setError(t.modals.addChannel.botNotAdminError.replace('{bot}', `@${BOT_USERNAME}`));
       return;
     }
 
@@ -115,80 +164,120 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
           </span>
         </div>
 
-        {/* Bot Admin Requirement Notice */}
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-          <span className="text-amber-400 text-lg mt-0.5">⚠️</span>
-          <span className="text-sm text-amber-300/80">
-            {t.modals.addChannel.botAdminRequired.replace('{bot}', `@${BOT_USERNAME}`)}
-          </span>
-        </div>
-
         {/* Channel Link */}
         <div>
           <label className="block text-sm font-medium text-tg-hint mb-2">
             {t.modals.addChannel.channelLink}
           </label>
-          <input
-            type="text"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            placeholder={t.modals.addChannel.channelLinkPlaceholder}
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-accent focus:outline-none transition-colors"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={link}
+              onChange={(e) => handleLinkChange(e.target.value)}
+              placeholder={t.modals.addChannel.channelLinkPlaceholder}
+              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-accent focus:outline-none transition-colors"
+            />
+            <Button
+              type="button"
+              variant={botIsAdmin ? 'primary' : 'secondary'}
+              onClick={handleCheckBotAdmin}
+              loading={checkBotAdminMutation.isPending}
+              disabled={checkBotAdminMutation.isPending || !link.trim()}
+              className="shrink-0"
+            >
+              {botIsAdmin ? '✓' : t.modals.addChannel.checkBot}
+            </Button>
+          </div>
           <p className="text-xs text-tg-hint mt-1">
             {t.modals.addChannel.channelLinkHint}
           </p>
         </div>
 
-        {/* Price */}
-        <div>
-          <label className="block text-sm font-medium text-tg-hint mb-2">
-            {t.modals.addChannel.pricePerPost}
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={pricePerPost}
-            onChange={(e) => setPricePerPost(e.target.value)}
-            placeholder="0.00"
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-accent focus:outline-none transition-colors"
-          />
-        </div>
-
-        {/* Categories */}
-        <div>
-          <label className="block text-sm font-medium text-tg-hint mb-2">
-            {t.modals.addChannel.categoriesMax}
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => {
-              const isSelected = selectedCategories.includes(cat.id);
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategoryToggle(cat.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isSelected
-                      ? 'bg-accent/20 border-accent text-accent border'
-                      : 'bg-white/5 border border-white/10 text-tg-hint'
-                  }`}
-                >
-                  <span>{cat.emoji}</span>
-                  <span>{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Bot Not Admin Error */}
-        {botNotAdmin && (
+        {/* Bot Admin Status */}
+        {botAdminChecked && !botIsAdmin && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-            <p className="text-sm text-red-400">
-              {t.modals.addChannel.botNotAdminError.replace('{bot}', botNotAdmin)}
+            <p className="text-sm font-medium text-red-400 mb-1">
+              {t.modals.addChannel.botNotAdminTitle}
             </p>
+            <p className="text-sm text-red-400/80">
+              {t.modals.addChannel.botNotAdminSteps.replace('{bot}', `@${BOT_USERNAME}`)}
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCheckBotAdmin}
+              loading={checkBotAdminMutation.isPending}
+              className="mt-2"
+            >
+              {t.modals.addChannel.recheckBot}
+            </Button>
+          </div>
+        )}
+
+        {botIsAdmin && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <span className="text-emerald-400 text-lg">✓</span>
+            <span className="text-sm text-emerald-300/80">
+              {t.modals.addChannel.botAdminConfirmed}
+            </span>
+          </div>
+        )}
+
+        {/* Price & Categories - only shown when bot is confirmed as admin */}
+        {botIsAdmin && (
+          <>
+            {/* Price */}
+            <div>
+              <label className="block text-sm font-medium text-tg-hint mb-2">
+                {t.modals.addChannel.pricePerPost}
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={pricePerPost}
+                onChange={(e) => setPricePerPost(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-accent focus:outline-none transition-colors"
+              />
+            </div>
+
+            {/* Categories */}
+            <div>
+              <label className="block text-sm font-medium text-tg-hint mb-2">
+                {t.modals.addChannel.categoriesMax}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => {
+                  const isSelected = selectedCategories.includes(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => handleCategoryToggle(cat.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-accent/20 border-accent text-accent border'
+                          : 'bg-white/5 border border-white/10 text-tg-hint'
+                      }`}
+                    >
+                      <span>{cat.emoji}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Info banner when bot not checked yet */}
+        {!botAdminChecked && !botIsAdmin && (
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <span className="text-amber-400 text-lg mt-0.5">!</span>
+            <span className="text-sm text-amber-300/80">
+              {t.modals.addChannel.botAdminRequired.replace('{bot}', `@${BOT_USERNAME}`)}
+            </span>
           </div>
         )}
 
@@ -199,13 +288,13 @@ export function AddChannelModal({ isOpen, onClose }: AddChannelModalProps) {
           </div>
         )}
 
-        {/* Submit */}
+        {/* Submit - only enabled when bot is admin */}
         <Button
           type="submit"
           variant="primary"
           fullWidth
           loading={createMutation.isPending}
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || !botIsAdmin}
         >
           {t.modals.addChannel.submit}
         </Button>

@@ -775,6 +775,13 @@ export class ChannelsService {
    * Request verification for a channel
    * Queues a job for MTProto worker to check if @sha6kii is admin
    */
+  async checkBotAdmin(link: string): Promise<{ isAdmin: boolean; botUsername: string }> {
+    const username = this.parseChannelLink(link);
+    const botUsername = await this.telegramBot.getBotUsername();
+    const isAdmin = await this.telegramBot.isBotAdminOfChannel(`@${username}`);
+    return { isAdmin, botUsername };
+  }
+
   async requestVerification(id: string, userId: string): Promise<ChannelResponseDto> {
     const channel = await this.prisma.channel.findUnique({
       where: { id },

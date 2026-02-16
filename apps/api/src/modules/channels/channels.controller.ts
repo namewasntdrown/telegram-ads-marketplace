@@ -29,6 +29,7 @@ import {
   BoostChannelDto,
   UpdateChannelStatusDto,
   AddChannelAdminDto,
+  CheckBotAdminDto,
 } from './dto/channel.dto';
 import { CurrentUser, CurrentUserData } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -120,6 +121,16 @@ export class ChannelsController {
     @Body() dto: CreateChannelByLinkDto
   ): Promise<ChannelResponseDto> {
     return this.channelsService.createByLink(user.id, dto);
+  }
+
+  @Post('check-bot-admin')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check if bot is admin of a channel' })
+  async checkBotAdmin(
+    @Body() dto: CheckBotAdminDto
+  ): Promise<{ isAdmin: boolean; botUsername: string }> {
+    return this.channelsService.checkBotAdmin(dto.link);
   }
 
   @Post(':id/boost')
